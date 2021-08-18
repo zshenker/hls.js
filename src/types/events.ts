@@ -79,6 +79,7 @@ export interface ManifestLoadingData {
 export interface ManifestLoadedData {
   audioTracks: MediaPlaylist[];
   captions?: MediaPlaylist[];
+  contentSteering: AttrList | null;
   levels: LevelParsed[];
   networkDetails: any;
   sessionData: Record<string, AttrList> | null;
@@ -96,6 +97,7 @@ export interface ManifestParsedData {
   audio: boolean;
   video: boolean;
   altAudio: boolean;
+  contentSteering: AttrList | null;
 }
 
 export interface LevelSwitchingData extends Omit<Level, '_urlId'> {

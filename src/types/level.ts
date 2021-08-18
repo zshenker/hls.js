@@ -10,6 +10,7 @@ export interface LevelParsed {
   id?: number;
   level?: number;
   name: string;
+  pathwayId?: string;
   textCodec?: string;
   unknownCodecs?: string[];
   url: string;
@@ -31,10 +32,17 @@ export interface LevelAttributes extends AttrList {
   LANGUAGE?: string;
   NAME?: string;
   'PROGRAM-ID'?: string;
+  'PATHWAY-ID'?: string;
   RESOLUTION?: string;
   SUBTITLES?: string;
   TYPE?: string;
   URI?: string;
+}
+
+export interface Pathway {
+  url: string;
+  pathwayId: string;
+  priority: number | undefined;
 }
 
 export enum HlsSkip {
@@ -58,12 +66,16 @@ export function getSkipValue(details: LevelDetails, msn?: number): HlsSkip {
 export class HlsUrlParameters {
   msn?: number;
   part?: number;
+  pathway?: string;
   skip?: HlsSkip;
+  throughput?: number;
 
-  constructor(msn?: number, part?: number, skip?: HlsSkip) {
+  constructor(msn?: number, part?: number, pathway?: string, skip?: HlsSkip, throughput?: number) {
     this.msn = msn;
     this.part = part;
     this.skip = skip;
+    this.pathway = pathway;
+    this.throughput = throughput;
   }
 
   addDirectives(uri: string): string | never {
@@ -74,8 +86,14 @@ export class HlsUrlParameters {
     if (this.part !== undefined) {
       url.searchParams.set('_HLS_part', this.part.toString());
     }
+    if (this.pathway !== undefined) {
+      url.searchParams.set('_HLS_pathway', this.pathway.toString());
+    }
     if (this.skip) {
       url.searchParams.set('_HLS_skip', this.skip);
+    }
+    if (this.throughput !== undefined) {
+      url.searchParams.set('_HLS_throughput', this.throughput.toFixed());
     }
     return url.toString();
   }
@@ -97,6 +115,7 @@ export class Level {
   public fragmentError: number = 0;
   public loadError: number = 0;
   public loaded?: { bytes: number; duration: number };
+  public pathways?: Pathway[] | undefined;
   public realBitrate: number = 0;
   public textGroupIds?: string[];
   public url: string[];
@@ -120,6 +139,10 @@ export class Level {
       .filter((c) => c)
       .join(',')
       .replace(/\.[^.,]+/g, '');
+    if (data.pathwayId) {
+      const pathway = {url: data.url, pathwayId: data.pathwayId, priority: undefined};
+      this.pathways = [pathway];
+    }
   }
 
   get maxBitrate(): number {

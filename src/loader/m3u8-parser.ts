@@ -20,7 +20,7 @@ type M3U8ParserFragments = Array<Fragment | null>;
 
 // https://regex101.com is your friend
 const MASTER_PLAYLIST_REGEX =
-  /#EXT-X-STREAM-INF:([^\r\n]*)(?:[\r\n](?:#[^\r\n]*)?)*([^\r\n]+)|#EXT-X-SESSION-DATA:([^\r\n]*)[\r\n]+/g;
+  /#EXT-X-STREAM-INF:([^\r\n]*)(?:[\r\n](?:#[^\r\n]*)?)*([^\r\n]+)|#EXT-X-SESSION-DATA:([^\r\n]*)[\r\n]+|#EXT-X-CONTENT-STEERING:([^\r\n]*)[\r\n]+/g;
 const MASTER_PLAYLIST_MEDIA_REGEX = /#EXT-X-MEDIA:(.*)/g;
 
 const LEVEL_PLAYLIST_REGEX_FAST = new RegExp(
@@ -99,6 +99,8 @@ export default class M3U8Parser {
     const levels: Array<LevelParsed> = [];
     const sessionData: Record<string, AttrList> = {};
     let hasSessionData = false;
+    let hasContentSteering = false;
+    let contentSteering: AttrList = new AttrList('');
     MASTER_PLAYLIST_REGEX.lastIndex = 0;
 
     let result: RegExpExecArray | null;
@@ -113,6 +115,7 @@ export default class M3U8Parser {
             attrs.decimalInteger('BANDWIDTH'),
           name: attrs.NAME,
           url: M3U8Parser.resolve(result[2], baseurl),
+          pathwayId: attrs['PATHWAY-ID'],
         };
 
         const resolution = attrs.decimalResolution('RESOLUTION');
@@ -138,11 +141,19 @@ export default class M3U8Parser {
           hasSessionData = true;
           sessionData[sessionAttrs['DATA-ID']] = sessionAttrs;
         }
+      } else if (result[4]) {
+        // '#EXT-X-CONTENT-STEERING', parse content steering data in group 4
+        const contentSteeringAttrs = new AttrList(result[4]);
+        if (contentSteeringAttrs['SERVER-URI']) {
+          hasContentSteering = true;
+          contentSteering = contentSteeringAttrs;
+        }
       }
     }
     return {
       levels,
       sessionData: hasSessionData ? sessionData : null,
+      contentSteering: hasContentSteering ? contentSteering : null,
     };
   }
 

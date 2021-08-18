@@ -187,6 +187,55 @@ http://proxy-21.dailymotion.com/sec(2a991e17f08fcd94f95637a6dd718ddd)/video/107/
     expect(result.sessionData).to.equal(null);
   });
 
+  it('parses manifest with content steering and 10 levels', function () {
+    const manifest = `#EXTM3U
+#EXT-X-CONTENT-STEERING:SERVER-URI="http://content-steering.dailymotion.com/steering?video=00012",PATHWAY-ID="CDN-A"
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=836280,CODECS="mp4a.40.2,avc1.64001f",RESOLUTION=848x360,NAME="480",PATHWAY-ID="CDN-A"
+http://proxy-62.dailymotion.com/sec(3ae40f708f79ca9471f52b86da76a3a8)/video/107/282/158282701_mp4_h264_aac_hq.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=836280,CODECS="mp4a.40.2,avc1.64001f",RESOLUTION=848x360,NAME="480",PATHWAY-ID="CDN-B"
+http://proxy-21.dailymotion.com/sec(3ae40f708f79ca9471f52b86da76a3a8)/video/107/282/158282701_mp4_h264_aac_hq.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=246440,CODECS="mp4a.40.5,avc1.42000d",RESOLUTION=320x136,NAME="240",PATHWAY-ID="CDN-A"
+http://proxy-62.dailymotion.com/sec(65b989b17536b5158360dfc008542daa)/video/107/282/158282701_mp4_h264_aac_ld.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=246440,CODECS="mp4a.40.5,avc1.42000d",RESOLUTION=320x136,NAME="240",PATHWAY-ID="CDN-B"
+http://proxy-21.dailymotion.com/sec(65b989b17536b5158360dfc008542daa)/video/107/282/158282701_mp4_h264_aac_ld.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=460560,CODECS="mp4a.40.5,avc1.420016",RESOLUTION=512x216,NAME="380",PATHWAY-ID="CDN-A"
+http://proxy-62.dailymotion.com/sec(b90a363ba42fd9eab9313f0cd2e4d38b)/video/107/282/158282701_mp4_h264_aac.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=460560,CODECS="mp4a.40.5,avc1.420016",RESOLUTION=512x216,NAME="380",PATHWAY-ID="CDN-B"
+http://proxy-21.dailymotion.com/sec(b90a363ba42fd9eab9313f0cd2e4d38b)/video/107/282/158282701_mp4_h264_aac.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2149280,CODECS="mp4a.40.2,avc1.64001f",RESOLUTION=1280x544,NAME="720",PATHWAY-ID="CDN-A"
+http://proxy-62.dailymotion.com/sec(c16ad76fb8641c41d759e20880043e47)/video/107/282/158282701_mp4_h264_aac_hd.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2149280,CODECS="mp4a.40.2,avc1.64001f",RESOLUTION=1280x544,NAME="720",PATHWAY-ID="CDN-B"
+http://proxy-21.dailymotion.com/sec(c16ad76fb8641c41d759e20880043e47)/video/107/282/158282701_mp4_h264_aac_hd.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=6221600,CODECS="mp4a.40.2,avc1.640028",RESOLUTION=1920x816,NAME="1080",PATHWAY-ID="CDN-A"
+http://proxy-62.dailymotion.com/sec(2a991e17f08fcd94f95637a6dd718ddd)/video/107/282/158282701_mp4_h264_aac_fhd.m3u8#cell=core
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=6221600,CODECS="mp4a.40.2,avc1.640028",RESOLUTION=1920x816,NAME="1080",PATHWAY-ID="CDN-B"
+http://proxy-21.dailymotion.com/sec(2a991e17f08fcd94f95637a6dd718ddd)/video/107/282/158282701_mp4_h264_aac_fhd.m3u8#cell=core`;
+
+    const result = M3U8Parser.parseMasterPlaylist(
+      manifest,
+      'http://www.dailymotion.com'
+    );
+    
+    const expected = new AttrList({
+      'SERVER-URI': 'http://content-steering.dailymotion.com/steering?video=00012',
+      'PATHWAY-ID': 'CDN-A'
+    });
+    expect(result.contentSteering).to.deep.equal(expected);
+
+    expect(result.levels.length, 10);
+    expect(result.levels[0].pathwayId).to.equal('CDN-A');
+    expect(result.levels[1].pathwayId).to.equal('CDN-B');
+    expect(result.levels[2].pathwayId).to.equal('CDN-A');
+    expect(result.levels[3].pathwayId).to.equal('CDN-B');
+    expect(result.levels[4].pathwayId).to.equal('CDN-A');
+    expect(result.levels[5].pathwayId).to.equal('CDN-B');
+    expect(result.levels[6].pathwayId).to.equal('CDN-A');
+    expect(result.levels[7].pathwayId).to.equal('CDN-B');
+    expect(result.levels[8].pathwayId).to.equal('CDN-A');
+    expect(result.levels[9].pathwayId).to.equal('CDN-B');
+    expect(result.sessionData).to.equal(null);
+  });
+
   it('parses manifest with EXT-X-SESSION-DATA', function () {
     const manifest = `#EXTM3U
 #EXT-X-SESSION-DATA:DATA-ID="com.dailymotion.sessiondata.test",VALUE="some data"

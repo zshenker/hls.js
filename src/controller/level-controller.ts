@@ -118,6 +118,9 @@ export default class LevelController extends BasePlaylistController {
         levels.push(levelFromSet);
       } else {
         levelFromSet.url.push(levelParsed.url);
+        if (levelFromSet.pathways && levelParsed.pathwayId) {
+          levelFromSet.pathways.push({url: levelParsed.url, pathwayId: levelParsed.pathwayId, priority: undefined});
+        }
       }
 
       if (attributes) {
@@ -188,6 +191,7 @@ export default class LevelController extends BasePlaylistController {
         audio: audioCodecFound,
         video: videoCodecFound,
         altAudio: !audioOnly && audioTracks.some((t) => !!t.url),
+        contentSteering: data.contentSteering,
       };
       this.hls.trigger(Events.MANIFEST_PARSED, edata);
 

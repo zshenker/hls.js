@@ -369,7 +369,7 @@ class PlaylistLoader {
 
     const url = getResponseUrl(response, context);
 
-    const { levels, sessionData } = M3U8Parser.parseMasterPlaylist(string, url);
+    const { levels, sessionData, contentSteering } = M3U8Parser.parseMasterPlaylist(string, url);
     if (!levels.length) {
       this.handleManifestParsingError(
         response,
@@ -450,6 +450,7 @@ class PlaylistLoader {
       stats,
       networkDetails,
       sessionData,
+      contentSteering,
     });
   }
 
@@ -506,6 +507,7 @@ class PlaylistLoader {
         stats,
         networkDetails,
         sessionData: null,
+        contentSteering: null,
       });
     }
 
